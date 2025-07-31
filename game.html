@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuclearn - Isotope Economics Adventure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #1a202c;
+            --bg-glass: rgba(45, 55, 72, 0.8);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-glow: #3b82f6;
+            --correct-glow: #22c55e;
+            --incorrect-glow: #ef4444;
+            --trophy-glow: #f59e0b;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            touch-action: manipulation;
+            background: linear-gradient(315deg, #1e293b, #2c3e50, #3b82f6, #1e293b);
+            background-size: 400% 400%;
+            animation: gradient-animation 20s ease infinite;
+            color: #e2e8f0;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        @keyframes pop-in { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        
+        .glass-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+            transition: transform 0.1s ease, box-shadow 0.3s ease;
+        }
+        .world-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 0 25px -5px var(--accent-glow);
+        }
+        .world-card.completed {
+            box-shadow: 0 0 25px -5px var(--trophy-glow);
+        }
+        
+        #levels-path {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            gap: 1rem;
+            padding: 2rem 0;
+            position: relative;
+        }
+        #path-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .level-node {
+            width: 5rem; height: 5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1.75rem; position: relative; z-index: 10;
+            transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+            border: 4px solid var(--border-color);
+        }
+        .level-node.unlocked { cursor: pointer; }
+        .level-node.unlocked:hover { transform: scale(1.15); }
+        .level-node.locked { background-color: #4a5568; cursor: not-allowed; }
+        .level-node.node-case-study { width: 6rem; height: 6rem; font-size: 2.5rem; }
+        
+        .level-row {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        .level-row .level-node {
+            transform: translateX(-6rem);
+        }
+        .level-row:nth-child(even) .level-node {
+            transform: translateX(6rem);
+        }
+        .trophy-row .level-node {
+            transform: translateX(0);
+        }
+        
+        .node-practice { background: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
+        .node-case-study { background: linear-gradient(45deg, #f59e0b, #ef4444); box-shadow: 0 0 15px #f59e0b; }
+
+        .level-node.completed { background: var(--correct-glow); box-shadow: 0 0 10px var(--correct-glow); }
+        
+        .mcq-option {
+            background-color: rgba(255,255,255,0.05); border: 2px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+        .mcq-option:hover:not(:disabled) { border-color: var(--accent-glow); background-color: rgba(59, 130, 246, 0.2); }
+        .mcq-option.selected { background-color: var(--accent-glow); color: white; border-color: var(--accent-glow); }
+        .mcq-option.correct { background-color: var(--correct-glow); color: white; box-shadow: 0 0 15px var(--correct-glow); }
+        .mcq-option.incorrect { background-color: var(--incorrect-glow); color: white; animation: shake 0.5s; }
+
+        .heart { color: #ef4444; font-size: 2rem; transition: color 0.3s, transform 0.3s; text-shadow: 0 0 5px var(--incorrect-glow); }
+        .heart.lost { color: #4a5568; text-shadow: none; transform: scale(0.8); }
+        .trophy { font-size: 2.5rem; color: var(--trophy-glow); animation: pop-in 0.5s; }
+        
+        .modal-backdrop { background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); display: none; }
+        .modal-backdrop.active { display: flex; animation: pop-in 0.3s; }
+        .modal-content { background: var(--bg-dark); border: 1px solid var(--border-color); }
+        .nav-logo {
+            height: 40px; /* Adjust as needed */
+            margin-right: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-bg-dark">
+
+    <!-- Navigation Header -->
+    <header class="w-full max-w-6xl mx-auto p-4 mb-8">
+        <nav class="glass-card flex justify-between items-center p-4 rounded-lg">
+            <div class="flex items-center">
+                <img src="./assets/Logo.png" alt="Nuclearn Logo" class="nav-logo">
+                <h1 class="text-2xl font-bold text-white">Nuclearn</h1>
+            </div>
+            <div class="flex space-x-4">
+                <a href="./index.html" class="text-white hover:text-blue-400 transition-colors">Home</a>
+                <a href="./game.html" class="text-white hover:text-blue-400 transition-colors">IsoAdventure</a>
+                <a href="./isotopedia.html" class="text-white hover:text-blue-400 transition-colors">Isotopedia</a>
+                <a href="./chatbot.html" class="text-white hover:text-blue-400 transition-colors">IsoBot</a>
+                <a href="./budget_game.html" class="text-white hover:text-blue-400 transition-colors">Budget Challenge</a>
+            </div>
+        </nav>
+    </header>
+
+    <div id="game-container" class="container mx-auto p-4 max-w-4xl">
+        <header class="flex justify-between items-center glass-card p-3 mb-8 sticky top-4 z-50">
+            <div id="hearts-container" class="flex gap-1"></div>
+            <div class="flex items-center gap-4">
+                <div id="user-info" class="text-right font-semibold"></div>
+                <div id="trophy-case" class="flex gap-2 items-center"></div>
+                <!-- This link is now redundant as it's in the main nav, but keeping for direct access if preferred -->
+                <a href="./isotopedia.html" id="isotopedia-btn" class="text-3xl hover:text-blue-400 transition-colors">📖</a>
+            </div>
+        </header>
+
+        <div id="world-select-screen" class="screen active">
+            <h1 class="text-5xl font-bold text-center mb-10 text-white" style="text-shadow: 0 0 10px var(--accent-glow);">Isotope Adventure</h1>
+            <div id="worlds-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8" style="perspective: 1000px;"></div>
+        </div>
+
+        <div id="level-select-screen" class="screen">
+            <button id="back-to-worlds" class="mb-6 glass-card px-5 py-2 rounded-lg hover:bg-gray-700 font-semibold">&larr; Back to Sectors</button>
+            <h1 id="level-select-title" class="text-4xl font-bold text-center mb-2 text-white"></h1>
+            <div id="levels-path">
+                <svg id="path-svg"></svg>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+             <div class="glass-card p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 id="quiz-level-title" class="text-xl font-semibold"></h2>
+                    <div class="w-1/2 bg-gray-700 rounded-full h-4 border-2 border-gray-600">
+                        <div id="quiz-progress-bar" class="bg-blue-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div id="question-container" class="text-3xl font-semibold text-white my-10 text-center min-h-[7rem]"></div>
+                <div id="answer-container" class="space-y-4"></div>
+                <button id="check-answer-btn" class="mt-8 w-full bg-blue-600 text-white font-bold py-4 rounded-xl text-lg hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="level-complete-modal" class="fixed inset-0 modal-backdrop items-center justify-center z-50">
+         <div class="modal-content rounded-2xl shadow-xl p-8 text-center max-w-sm mx-auto">
+            <h2 id="level-status-title" class="text-3xl font-bold mb-2"></h2>
+            <div id="star-award" class="text-7xl my-4 star"></div>
+            <p class="text-xl mb-4">Accuracy: <span id="accuracy-display" class="font-bold"></span></p>
+            <button id="next-level-btn" class="mt-6 w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600">Continue</button>
+        </div>
+    </div>
+    
+    <div id="world-complete-modal" class="fixed inset-0 modal-backdrop items-center justify-center z-50">
+        <div class="modal-content rounded-2xl shadow-xl p-8 text-center max-w-sm mx-auto">
+            <h2 class="text-3xl font-bold text-amber-400 mb-2">Sector Complete!</h2>
+            <div id="trophy-award" class="text-8xl my-4"></div>
+            <p class="text-lg mb-4">You've mastered this sector and earned a trophy!</p>
+            <button id="collect-trophy-btn" class="mt-6 w-full bg-amber-500 text-white font-bold py-3 rounded-lg hover:bg-amber-600">Awesome!</button>
+        </div>
+    </div>
+
+    <div id="game-over-modal" class="fixed inset-0 modal-backdrop items-center justify-center z-50">
+        <div class="modal-content rounded-2xl shadow-xl p-8 text-center max-w-sm mx-auto">
+            <h2 class="text-3xl font-bold text-red-500 mb-2">Game Over!</h2>
+            <p class="text-lg mb-4">You've run out of hearts. Don't worry, you can try again!</p>
+            <button id="restart-game-btn" class="mt-6 w-full bg-blue-500 text-white font-bold py-3 rounded-lg hover:bg-blue-600">Try Again</button>
+        </div>
+    </div>
+    
+    <script>
+        // --- GAME DATA --- 
+        const gameData = {
+            medicine: { name: "Medical Isotopes", icon: "⚕️", trophy: "🏆", path: [
+                { type: 'practice', icon: '1', questions: [
+                    { question: "What is an isotope?", options: ["A type of telescope", "An atom with a different number of neutrons", "A subatomic particle"], answer: "An atom with a different number of neutrons" },
+                    { question: "Which medical procedure commonly uses Technetium-99m?", options: ["MRI Scans", "Diagnostic Imaging", "Blood Transfusions"], answer: "Diagnostic Imaging" },
+                    { question: "The 'half-life' of an isotope refers to...", options: ["Its total lifespan", "The time for half of its atoms to decay", "Its weight divided by two"], answer: "The time for half of its atoms to decay" },
+                    { question: "What is the primary source of most medical isotopes used globally?", options: ["Particle Accelerators", "Research Nuclear Reactors", "Outer Space"], answer: "Research Nuclear Reactors" },
+                    { question: "True or False: All isotopes are radioactive.", options: ["True", "False", "Only on weekends"], answer: "False" },
+                ]},
+                { type: 'practice', icon: '2', questions: [
+                    { question: "A hospital's decision to build its own cyclotron vs. buying isotopes is a classic 'make vs. buy' economic problem. What is the key factor?", options: ["Local zoning laws", "Volume of demand for PET scans", "The hospital's logo"], answer: "Volume of demand for PET scans" },
+                    { question: "Cobalt-60 is used for sterilizing medical equipment. Its main economic advantage over steam autoclaves for single-use plastics is:", options: ["It's faster", "It penetrates packaging without melting the plastic", "It makes the equipment blue"], answer: "It penetrates packaging without melting the plastic" },
+                    { question: "The global supply chain for Molybdenum-99 is fragile. From an economic standpoint, this creates:", options: ["Price stability", "Supply chain risk and price volatility", "More job opportunities for pilots"], answer: "Supply chain risk and price volatility" },
+                    { question: "What does 'theranostics' mean in nuclear medicine?", options: ["A new type of therapy", "Using one isotope to diagnose and another to treat a disease", "A brand of medical scanner"], answer: "Using one isotope to diagnose and another to treat a disease" },
+                    { question: "A short half-life for a diagnostic isotope is economically beneficial because it...", options: ["Is cheaper to produce", "Reduces patient hospital stay and minimizes waste disposal costs", "Allows for faster imaging"], answer: "Reduces patient hospital stay and minimizes waste disposal costs" },
+                ]},
+                { type: 'practice', icon: '3', questions: [
+                    { question: "A pharmaceutical company develops a 'deuterated' drug. What is the primary economic motivation?", options: ["It's easier to manufacture", "It extends the patent life of the original drug", "It tastes better"], answer: "It extends the patent life of the original drug" },
+                    { question: "Alpha-particle therapy is a promising new cancer treatment. What is its main economic challenge?", options: ["The particles are too large", "The limited availability and high cost of alpha-emitting isotopes", "Regulatory hurdles"], answer: "The limited availability and high cost of alpha-emitting isotopes" },
+                    { question: "Why are research reactors that produce isotopes often government-subsidized?", options: ["They are not profitable as standalone businesses", "They are considered critical national infrastructure for healthcare", "They look good in promotional videos"], answer: "They are considered critical national infrastructure for healthcare" },
+                    { question: "What is a major logistical cost associated with PET imaging centers?", options: ["Electricity for the lights", "The need for an on-site or nearby cyclotron due to short half-lives", "High-speed internet"], answer: "The need for an on-site or nearby cyclotron due to short half-lives" },
+                    { question: "The decay product of Molybdenum-99 is:", options: ["Iodine-131", "Technetium-99m", "Cobalt-60"], answer: "Technetium-99m" },
+                ]},
+                { type: 'practice', icon: '4', questions: [
+                    { question: "Which of these is NOT a primary use of radiation in medicine?", options: ["Sterilization", "Diagnostics", "Powering hospital lights"], answer: "Powering hospital lights" },
+                    { question: "The 'cold chain' is crucial for some radiopharmaceuticals. What economic challenge does this present?", options: ["Refrigerators are expensive", "It adds significant transportation and storage costs", "It's difficult to find enough ice"], answer: "It adds significant transportation and storage costs" },
+                    { question: "What is the economic term for the benefit of avoiding a misdiagnosis by using a more accurate nuclear scan?", options: ["Cost-effectiveness", "Return on Investment", "Averted cost"], answer: "Averted cost" },
+                    { question: "A new therapy uses Lutetium-177. Its success will economically impact the demand for which raw material?", options: ["Ytterbium-176", "Lutetium Oxide", "Both are needed"], answer: "Both are needed" },
+                    { question: "Why is Cobalt-60 teletherapy (external beam) being phased out in wealthy nations in favor of linear accelerators?", options: ["LINACs are more precise, leading to better outcomes and fewer side effects", "Cobalt-60 is running out", "LINACs use less space"], answer: "LINACs are more precise, leading to better outcomes and fewer side effects" },
+                ]},
+                { type: 'case-study', icon: '📈' }
+            ]},
+            agriculture: { name: "Agriculture & Food", icon: "🌾", trophy: "🏆", path: [
+                { type: 'practice', icon: '1', questions: [
+                    { question: "What is the primary goal of using radiation for crop mutation?", options: ["To make plants glow", "To create new, beneficial traits", "To sterilize the soil"], answer: "To create new, beneficial traits" },
+                    { question: "The Sterile Insect Technique (SIT) is a form of:", options: ["Pest birth control", "A new pesticide", "A scarecrow"], answer: "Pest birth control" },
+                    { question: "Food irradiation uses gamma rays to kill bacteria. What is the main economic benefit for consumers?", options: ["It cooks the food", "Increased food safety and longer shelf-life", "It adds extra vitamins"], answer: "Increased food safety and longer shelf-life" },
+                    { question: "Isotopes like Nitrogen-15 are used as 'tracers' in agriculture. What do they trace?", options: ["Animal migration", "Fertilizer uptake by plants", "Water pollution"], answer: "Fertilizer uptake by plants" },
+                    { question: "True or False: Irradiated food becomes radioactive.", options: ["True", "False", "Only for a few seconds"], answer: "False" },
+                ]},
+                { type: 'practice', icon: '2', questions: [
+                    { question: "A country develops a drought-resistant wheat variety via mutation breeding. What is the largest economic impact?", options: ["The wheat tastes better", "Enhanced food security and reduced economic loss during droughts", "It requires less sunlight"], answer: "Enhanced food security and reduced economic loss during droughts" },
+                    { question: "The high initial investment for an SIT facility is justified by what long-term economic gain?", options: ["Reduced annual spending on chemical pesticides and less crop damage", "Increased tourism to see the facility", "It creates high-tech jobs"], answer: "Reduced annual spending on chemical pesticides and less crop damage" },
+                    { question: "A spice importer irradiates their products. This provides an economic advantage by:", options: ["Allowing them to meet strict international quarantine and safety standards", "Making the spices more potent", "Reducing the weight for shipping"], answer: "Allowing them to meet strict international quarantine and safety standards" },
+                    { question: "By using tracers to study fertilizer use, a large farm can reduce its nitrogen fertilizer usage by 20%. This is a direct saving in:", options: ["Water costs", "Operational costs", "Labor costs"], answer: "Operational costs" },
+                    { question: "Which of these foods is commonly irradiated in the US to control pathogens?", options: ["Milk", "Ground beef and poultry", "Bread"], answer: "Ground beef and poultry" },
+                ]},
+                { type: 'practice', icon: '3', questions: [ 
+                    { question: "What is the economic term for the benefit a country receives from being able to export crops that meet other countries' pest-free standards using SIT?", options: ["Market Access", "Trade Deficit", "Export Subsidy"], answer: "Market Access" },
+                    { question: "Why is food irradiation not as widespread as other preservation methods like canning or freezing?", options: ["It is too expensive", "Negative public perception and regulatory hurdles", "It doesn't work on all foods"], answer: "Negative public perception and regulatory hurdles" },
+                    { question: "Using isotopic techniques to measure soil erosion helps farmers economically by:", options: ["Making the soil more compact", "Identifying areas that need targeted conservation efforts, saving costs", "It's a requirement for farm insurance"], answer: "Identifying areas that need targeted conservation efforts, saving costs" },
+                    { question: "A new rice variety developed through mutation breeding has a 15% higher yield. This directly impacts which part of the economic equation?", options: ["Supply", "Demand", "Price"], answer: "Supply" },
+                    { question: "The IAEA helps member states adopt nuclear techniques in agriculture. This is an example of:", options: ["Economic Sanctions", "1Technology Transfer", "A Trade Agreement"], answer: "Technology Transfer" },
+                ]},
+                { type: 'practice', icon: '4', questions: [ 
+                    { question: "What is a major 'externality' (indirect economic effect) of using SIT instead of pesticides?", options: ["It's more expensive", "Protection of biodiversity and water resources", "It requires more electricity"], answer: "Protection of biodiversity and water resources" },
+                    { question: "The main purpose of a 'food-insecure' nation investing in nuclear agriculture is to:", options: ["Boost its high-tech sector", "Reduce its reliance on food imports and aid", "Win scientific awards"], answer: "Reduce its reliance on food imports and aid" },
+                    { question: "Which of these is NOT an economic benefit of food irradiation?", options: ["Longer shelf life", "Killing harmful bacteria", "Improving the nutritional value"], answer: "Improving the nutritional value" },
+                    { question: "The economic viability of an SIT program depends heavily on:", options: ["The color of the flies", "The size of the target area and the insect's biology", "Local weather patterns"], answer: "The size of the target area and the insect's biology" },
+                    { question: "A farmer uses Carbon-13 analysis to verify the origin of their honey. This adds economic value by:", options: ["Making the honey sweeter", "Authenticating it as a premium product, justifying a higher price", "It makes the jars heavier"], answer: "Authenticating it as a premium product, justifying a higher price" },
+                ]},
+                { type: 'case-study', icon: '📈' }
+            ]},
+            industry: { name: "Industrial Applications", icon: "🏭", trophy: "🏆", path: [
+                { type: 'practice', icon: '1', questions: [ 
+                    { question: "Non-Destructive Testing (NDT) is used to inspect materials without damaging them. What is the main purpose of NDT?", options: ["To test if something is indestructible", "To ensure quality, safety, and reliability", "To make materials stronger"], answer: "To ensure quality, safety, and reliability" },
+                    { question: "Which isotope is commonly used in industrial radiography to inspect welds?", options: ["Technetium-99m", "Iridium-192", "Carbon-14"], answer: "Iridium-192" },
+                    { question: "A 'radiotracer' is used in a factory to:", options: ["Trace drawings with radiation", "Follow the flow of a substance through a complex system", "Count radioactive particles"], answer: "Follow the flow of a substance through a complex system" },
+                    { question: "What household device commonly contains a small amount of Americium-241?", options: ["Microwave oven", "Smoke Detector", "Television"], answer: "Smoke Detector" },
+                    { question: "True or False: Industrial radiography is a type of photography.", options: ["True", "False", "Only with a special camera"], answer: "False" },
+                ]},
+                { type: 'practice', icon: '2', questions: [ 
+                    { question: "An oil company uses gamma radiography for pipeline inspection. The primary economic saving comes from:", options: ["The inspection team gets a better tan", "Preventing catastrophic failures and costly environmental cleanups", "The equipment is painted in company colors"], answer: "Preventing catastrophic failures and costly environmental cleanups" },
+                    { question: "Why is gamma radiography often more economical than X-ray for fieldwork on a remote pipeline?", options: ["The gamma source is highly portable and needs no external power", "The pictures have a vintage, artistic quality", "The equipment can be rented more cheaply"], answer: "The gamma source is highly portable and needs no external power" },
+                    { question: "In a factory, a radioactive tracer is used to find a leak. This saves money primarily by:", options: ["Making the leaking substance visible to the naked eye", "Drastically reducing diagnostic downtime and lost production", "The tracer adds a pleasant scent to the factory"], answer: "Drastically reducing diagnostic downtime and lost production" },
+                    { question: "The economic value of a smoke detector using Americium-241 is based on the principle of:", options: ["High-volume, low-cost mass production", "Its ability to be recharged", "Its decorative qualities"], answer: "High-volume, low-cost mass production" },
+                    { question: "Using radiation to cross-link polymers in manufacturing wire and cable insulation results in a product that is more:", options: ["Colorful", "Heat-resistant and durable, justifying a premium price", "Flexible"], answer: "Heat-resistant and durable, justifying a premium price" },
+                ]},
+                { type: 'practice', icon: '3', questions: [ 
+                    { question: "Neutron activation analysis (NAA) is a highly sensitive technique. What is its main economic application?", options: ["Cooking food with neutrons", "Detecting minute quantities of pollutants or impurities in manufacturing", "Creating new elements"], answer: "Detecting minute quantities of pollutants or impurities in manufacturing" },
+                    { question: "A 'nucleonic gauge' is used in a paper mill to control paper thickness. How does this provide economic value?", options: ["It makes the paper stronger", "It ensures consistent quality and reduces material waste", "It counts the number of sheets"], answer: "It ensures consistent quality and reduces material waste" },
+                    { question: "What is a major economic reason for using radiotracers to study wear and tear in engines?", options: ["It's the only way to see inside the engine", "It allows for faster and more precise R&D, reducing time-to-market for new designs", "It makes the engine run quieter"], answer: "It allows for faster and more precise R&D, reducing time-to-market for new designs" },
+                    { question: "The use of electron beam processing to cure coatings on furniture is economically advantageous because it:", options: ["Is faster and uses less energy than thermal curing", "Makes the furniture magnetic", "Adds a nice smell"], answer: "Is faster and uses less energy than thermal curing" },
+                    { question: "Deuterium is used in manufacturing optical fibers. What economic problem does it solve?", options: ["It makes the glass clearer", "It reduces signal loss over long distances, improving network efficiency", "It's cheaper than silica"], answer: "It reduces signal loss over long distances, improving network efficiency" },
+                ]},
+                { type: 'practice', icon: '4', questions: [ 
+                    { question: "Why would a manufacturing plant use a gamma scan on a distillation column?", options: ["To take a picture of it", "To diagnose operational problems without a costly shutdown", "To clean it with radiation"], answer: "To diagnose operational problems without a costly shutdown" },
+                    { question: "The long half-life of sources like Cobalt-60 is an economic advantage for industrial irradiators because:", options: ["It never needs to be replaced", "The source requires less frequent replacement, reducing long-term costs", "It's easier to handle"], answer: "The source requires less frequent replacement, reducing long-term costs" },
+                    { question: "What is the concept of 'value of information' in the context of industrial NDT?", options: ["The price of an NDT textbook", "The economic benefit gained by knowing the internal state of a component", "The cost of the inspection"], answer: "The economic benefit gained by knowing the internal state of a component" },
+                    { question: "Using radiotracers to optimize flow in a chemical reactor directly impacts:", options: ["The color of the final product", "Production yield and efficiency", "The CEO's bonus"], answer: "Production yield and efficiency" },
+                    { question: "The primary economic risk associated with owning industrial radiography sources is:", options: ["The cost of the source itself", "The cost of security, licensing, and eventual disposal", "The risk of it being stolen by supervillains"], answer: "The cost of security, licensing, and eventual disposal" },
+                ]},
+                { type: 'case-study', icon: '📈' }
+            ]},
+            space: { name: "Space Exploration", icon: "🚀", trophy: "🏆", path: [
+                { type: 'practice', icon: '1', questions: [ 
+                    { question: "What does 'RTG' stand for in the context of space missions?", options: ["Really Terrific Gizmo", "Radioisotope Thermoelectric Generator", "Rocket Trajectory Guide"], answer: "Radioisotope Thermoelectric Generator" },
+                    { question: "RTGs are essentially nuclear...", options: ["Engines", "Batteries", "Radios"], answer: "Batteries" },
+                    { question: "Which isotope is the most common fuel for modern RTGs used by NASA?", options: ["Uranium-235", "Plutonium-238", "Technetium-99m"], answer: "Plutonium-238" },
+                    { question: "Why can't solar panels be used for missions to the outer planets like Jupiter and beyond?", options: ["They are too heavy", "The sun is too faint to provide enough power", "They would freeze and shatter"], answer: "The sun is too faint to provide enough power" },
+                    { question: "True or False: The heat from an RTG can be used to keep a spacecraft's instruments warm.", options: ["True", "False", "Only if it's painted red"], answer: "True" },
+                ]},
+                { type: 'practice', icon: '2', questions: [ 
+                    { question: "For a 20-year mission to the outer solar system, why is an RTG more economical than solar panels?", options: ["Solar panels are afraid of the dark", "The total cost of ownership is lower due to unmatched reliability and longevity", "RTGs are lighter than solar panels"], answer: "The total cost of ownership is lower due to unmatched reliability and longevity" },
+                    { question: "The high cost of Plutonium-238 for RTGs is a major factor in space mission budgets. This is primarily due to...", options: ["High demand from the jewelry industry", "The complex and expensive production process, requiring specialized reactors", "Shipping and handling fees to space"], answer: "The complex and expensive production process, requiring specialized reactors" },
+                    { question: "What is the main economic benefit of using radioisotope heater units (RHUs) on a Mars rover?", options: ["They make the rover look cool at night", "They prevent critical electronics from freezing, protecting a multi-billion dollar asset", "They can be used to make toast"], answer: "They prevent critical electronics from freezing, protecting a multi-billion dollar asset" },
+                    { question: "The economic 'value' of the scientific data returned by a deep space probe powered by an RTG is:", options: ["Equal to the cost of the mission", "Considered invaluable and drives future innovation", "Calculated by the number of pictures it takes"], answer: "Considered invaluable and drives future innovation" },
+                    { question: "Why is the development of new, more efficient thermoelectric materials an economic priority for space agencies?", options: ["It would make RTGs smaller and lighter, reducing launch costs", "The current materials are ugly", "To win a Nobel Prize"], answer: "It would make RTGs smaller and lighter, reducing launch costs" },
+                ]},
+                { type: 'practice', icon: '3', questions: [ 
+                    { question: "The 'opportunity cost' of not using an RTG for a deep space mission is:", options: ["The cost of the RTG itself", "The entire mission, as no other power source is viable", "The cost of solar panels"], answer: "The entire mission, as no other power source is viable" },
+                    { question: "What is the primary economic reason the USA restarted domestic production of Plutonium-238?", options: ["To sell it to other countries", "To ensure a stable supply for future NASA missions, a national strategic asset", "To find a use for old nuclear materials"], answer: "To ensure a stable supply for future NASA missions, a national strategic asset" },
+                    { question: "The long life of an RTG provides economic value by:", options: ["Enabling extended missions that can collect more data", "Being reusable for other missions", "Looking impressive in photos"], answer: "Enabling extended missions that can collect more data" },
+                    { question: "Which of these is NOT a factor in the high cost of an RTG-powered mission?", options: ["The cost of the Plutonium-238", "The cost of the launch vehicle", "The cost of the mission control coffee"], answer: "The cost of the mission control coffee" },
+                    { question: "The economic justification for multi-billion dollar space missions is often based on:", options: ["The potential for groundbreaking scientific discovery and technological spin-offs", "Creating jobs for astronauts", "The entertainment value"], answer: "The potential for groundbreaking scientific discovery and technological spin-offs" },
+                ]},
+                { type: 'practice', icon: '4', questions: [ 
+                    { question: "What is the 'total mission cost' concept in space exploration economics?", options: ["The cost of the rocket", "The sum of all costs from development to mission end, including risk analysis", "The cost of fuel"], answer: "The sum of all costs from development to mission end, including risk analysis" },
+                    { question: "Why is reliability a more important economic factor than initial cost for deep space power sources?", options: ["Because there are no repair shops in space", "The cost of mission failure is astronomically high", "Astronauts prefer reliable equipment"], answer: "The cost of mission failure is astronomically high" },
+                    { question: "The use of RTGs on the Voyager probes, launched in 1977 and still operating, is an extreme example of what economic principle?", options: ["Planned obsolescence", "High return on investment over a long period", "A sunk cost"], answer: "High return on investment over a long period" },
+                    { question: "What is a 'technological spin-off' from the space program?", options: ["A new type of satellite dish", "Technologies developed for space that find commercial use on Earth", "A TV show about space"], answer: "Technologies developed for space that find commercial use on Earth" },
+                    { question: "The main economic trade-off when designing a power system for a planetary rover is between:", options: ["Power output, lifespan, and mass (launch cost)", "Color and shape", "The rover's name and its mission patch"], answer: "Power output, lifespan, and mass (launch cost)" },
+                ]},
+                { type: 'case-study', icon: '📈' }
+            ]}
+        };
+
+        let gameState = { hearts: 5, progress: {} };
+
+        const dom = {
+            heartsContainer: document.getElementById('hearts-container'),
+            trophyCase: document.getElementById('trophy-case'),
+            screens: document.querySelectorAll('.screen'),
+            worldsGrid: document.getElementById('worlds-grid'),
+            levelsPath: document.getElementById('levels-path'),
+            pathSvg: document.getElementById('path-svg'),
+            quizScreen: document.getElementById('quiz-screen'),
+            questionContainer: document.getElementById('question-container'),
+            answerContainer: document.getElementById('answer-container'),
+            checkAnswerBtn: document.getElementById('check-answer-btn'),
+            modals: {
+                levelComplete: document.getElementById('level-complete-modal'),
+                worldComplete: document.getElementById('world-complete-modal'),
+                gameOver: document.getElementById('game-over-modal'),
+            }
+        };
+        
+        const sounds = {
+            correct: new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination(),
+            incorrect: new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.1 } }).toDestination(),
+            levelWin: new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.1, decay: 0.4, sustain: 0.1, release: 0.2 } }).toDestination(),
+            trophyWin: new Tone.Synth({ oscillator: { type: 'fatsawtooth', count: 3 }, envelope: { attack: 0.1, decay: 0.4, sustain: 0.1, release: 0.2 } }).toDestination(),
+            click: new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 2 }).toDestination(),
+        };
+
+        function playSound(sound, note, duration = '8n') {
+            if (Tone.context.state !== 'running') Tone.context.resume();
+            sounds[sound].triggerAttackRelease(note, duration);
+        }
+
+        function showScreen(screenId) {
+            dom.screens.forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showModal(modal, show) {
+            if (show) modal.classList.add('active');
+            else modal.classList.remove('active');
+        }
+
+        function renderHearts() {
+            dom.heartsContainer.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                dom.heartsContainer.innerHTML += `<span class="heart ${i < gameState.hearts ? '' : 'lost'}">♥</span>`;
+            }
+        }
+
+        function renderTrophies() {
+            dom.trophyCase.innerHTML = '';
+            for (const worldKey in gameState.progress) {
+                if (gameState.progress[worldKey].trophy) {
+                    dom.trophyCase.innerHTML += `<span class="trophy" title="${gameData[worldKey].name}">${gameData[worldKey].trophy}</span>`;
+                }
+            }
+        }
+
+        function renderWorlds() {
+            dom.worldsGrid.innerHTML = '';
+            for (const worldKey in gameData) {
+                const world = gameData[worldKey];
+                const worldProgress = gameState.progress[worldKey] || {};
+                const isCompleted = worldProgress.trophy;
+                const worldCard = document.createElement('div');
+                worldCard.className = `glass-card world-card relative p-6 cursor-pointer ${isCompleted ? 'completed' : ''}`;
+                worldCard.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="text-5xl mr-5">${world.icon}</span>
+                        <h2 class="text-2xl font-bold">${world.name}</h2>
+                    </div>
+                    ${isCompleted ? `<div class="trophy-icon-card">${world.trophy}</div>` : ''}
+                `;
+                worldCard.onclick = () => { playSound('click', 'C3'); selectWorld(worldKey); };
+                dom.worldsGrid.appendChild(worldCard);
+            }
+        }
+        
+        function selectWorld(worldKey) {
+            gameState.currentWorld = worldKey;
+            document.getElementById('level-select-title').textContent = gameData[worldKey].name;
+            renderLevelPath(worldKey);
+            showScreen('level-select-screen');
+        }
+
+        function renderLevelPath(worldKey) {
+            const pathContainer = dom.levelsPath;
+            pathContainer.innerHTML = '<svg id="path-svg" class="absolute top-0 left-0 w-full h-full z-0 pointer-events-none"></svg>'; // Clear and add SVG container
+            const svg = pathContainer.querySelector('#path-svg');
+            const worldProgress = gameState.progress[worldKey] || { completedNodes: 0 };
+            const path = gameData[worldKey].path;
+            
+            const nodes = [];
+
+            // Add Trophy Node at the top
+            const trophyNodeData = path.find(p => p.type === 'case-study');
+            const trophyRow = document.createElement('div');
+            trophyRow.className = 'level-row trophy-row';
+            const trophyNode = document.createElement('div');
+            const isTrophyUnlocked = path.length - 1 <= worldProgress.completedNodes;
+            const isTrophyComplete = worldProgress.trophy;
+            trophyNode.className = `level-node node-case-study ${isTrophyUnlocked ? 'unlocked' : 'locked'} ${isTrophyComplete ? 'completed' : ''}`;
+            trophyNode.innerHTML = `<span>${trophyNodeData.icon}</span>`;
+            if(isTrophyUnlocked) trophyNode.onclick = () => { playSound('click', 'C4'); startNode(worldKey, path.length - 1); };
+            trophyRow.appendChild(trophyNode);
+            pathContainer.appendChild(trophyRow);
+            nodes.push(trophyNode);
+
+            // Add middle nodes
+            for (let i = path.length - 2; i >= 0; i--) {
+                const row = document.createElement('div');
+                const alignment = (i % 2 === 0) ? 'justify-start' : 'justify-end';
+                row.className = `level-row ${alignment} w-full px-20`;
+
+                const node = path[i];
+                const levelNode = document.createElement('div');
+                const isUnlocked = i <= worldProgress.completedNodes;
+                const isComplete = i < worldProgress.completedNodes;
+                
+                levelNode.className = `level-node node-${node.type} ${isUnlocked ? 'unlocked' : 'locked'} ${isComplete ? 'completed' : ''}`;
+                levelNode.innerHTML = `<span>${node.icon}</span>`;
+                
+                if(isUnlocked) {
+                    levelNode.onclick = () => {
+                        playSound('click', 'C4');
+                        startNode(worldKey, i);
+                    };
+                }
+                row.appendChild(levelNode);
+                pathContainer.appendChild(row);
+                nodes.push(levelNode);
+            }
+
+            // Add Start Banner at the bottom
+            const startBanner = document.createElement('div');
+            startBanner.className = 'text-2xl font-bold text-green-400 p-4 rounded-lg mt-4';
+            startBanner.textContent = 'START';
+            pathContainer.appendChild(startBanner);
+            
+            // Draw SVG lines after a short delay to allow DOM to render
+            setTimeout(() => drawPathLines(nodes, pathContainer, svg), 100);
+        }
+
+        function drawPathLines(nodes, container, svg) {
+            svg.innerHTML = ''; // Clear previous lines
+            const containerRect = container.getBoundingClientRect();
+            
+            for (let i = 0; i < nodes.length - 1; i++) {
+                const startNode = nodes[i];
+                const endNode = nodes[i+1];
+                
+                const startRect = startNode.getBoundingClientRect();
+                const endRect = endNode.getBoundingClientRect();
+
+                const x1 = startRect.left + startRect.width / 2 - containerRect.left;
+                const y1 = startRect.top + startRect.height / 2 - containerRect.top;
+                const x2 = endRect.left + endRect.width / 2 - containerRect.left;
+                const y2 = endRect.top + endRect.height / 2 - containerRect.top;
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const d = `M ${x1} ${y1} C ${x1} ${y1 + (y2-y1)/2}, ${x2} ${y2 - (y2-y1)/2}, ${x2} ${y2}`;
+                path.setAttribute('d', d);
+                path.setAttribute('stroke', 'rgba(255, 255, 255, 0.2)');
+                path.setAttribute('stroke-width', '6');
+                path.setAttribute('fill', 'none');
+                svg.appendChild(path);
+            }
+        }
+
+
+        function startNode(worldKey, nodeIndex) {
+            gameState.currentNodeIndex = nodeIndex;
+            const node = gameData[worldKey].path[nodeIndex];
+            if (node.type === 'case-study') {
+                startCaseStudy(worldKey, nodeIndex);
+            } else {
+                startQuiz(worldKey, nodeIndex);
+            }
+        }
+        
+        function startQuiz(worldKey, nodeIndex) {
+            gameState.currentQuestionIndex = 0;
+            gameState.correctAnswers = 0;
+            showScreen('quiz-screen');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const node = gameData[gameState.currentWorld].path[gameState.currentNodeIndex];
+            const question = node.questions[gameState.currentQuestionIndex];
+            
+            document.getElementById('quiz-level-title').textContent = `Level ${node.icon} - Question ${gameState.currentQuestionIndex + 1}`;
+            const progress = ((gameState.currentQuestionIndex) / node.questions.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${progress}%`;
+
+            dom.questionContainer.textContent = question.question;
+            dom.answerContainer.innerHTML = '';
+            gameState.selectedAnswer = null;
+            
+            dom.checkAnswerBtn.textContent = 'Submit';
+            dom.checkAnswerBtn.disabled = true;
+            dom.checkAnswerBtn.onclick = checkAnswer;
+
+            question.options.forEach(option => {
+                const optionBtn = document.createElement('button');
+                optionBtn.className = 'mcq-option block w-full text-left p-4 border-2 rounded-lg font-semibold';
+                optionBtn.textContent = option;
+                optionBtn.onclick = () => {
+                    document.querySelectorAll('.mcq-option').forEach(btn => btn.classList.remove('selected'));
+                    optionBtn.classList.add('selected');
+                    gameState.selectedAnswer = option;
+                    dom.checkAnswerBtn.disabled = false;
+                    playSound('click', 'C3', '16n');
+                };
+                dom.answerContainer.appendChild(optionBtn);
+            });
+        }
+
+        function checkAnswer() {
+            const node = gameData[gameState.currentWorld].path[gameState.currentNodeIndex];
+            const question = node.questions[gameState.currentQuestionIndex];
+            const isCorrect = gameState.selectedAnswer === question.answer;
+
+            dom.checkAnswerBtn.disabled = true;
+            document.querySelectorAll('.mcq-option').forEach(btn => {
+                btn.disabled = true;
+                if (btn.textContent === question.answer) btn.classList.add('correct');
+                else if (btn.textContent === gameState.selectedAnswer) btn.classList.add('incorrect');
+            });
+
+            if (isCorrect) {
+                gameState.correctAnswers++;
+                playSound('correct', 'C5');
+            } else {
+                gameState.hearts--;
+                renderHearts();
+                playSound('incorrect', 'C3');
+                if (gameState.hearts <= 0) {
+                    showModal(dom.modals.gameOver, true);
+                    return;
+                }
+            }
+            
+            const isLastQuestion = gameState.currentQuestionIndex === node.questions.length - 1;
+            dom.checkAnswerBtn.textContent = isLastQuestion ? 'End' : 'Next';
+            dom.checkAnswerBtn.disabled = false;
+            dom.checkAnswerBtn.onclick = advanceQuestion;
+        }
+
+        function advanceQuestion() {
+            gameState.currentQuestionIndex++;
+            const node = gameData[gameState.currentWorld].path[gameState.currentNodeIndex];
+            if (gameState.currentQuestionIndex < node.questions.length) {
+                renderQuestion();
+            } else {
+                levelComplete();
+            }
+        }
+        
+        function levelComplete() {
+            const worldKey = gameState.currentWorld;
+            const world = gameData[worldKey];
+            const worldProgress = gameState.progress[worldKey];
+            const node = world.path[gameState.currentNodeIndex];
+            
+            const accuracy = Math.round((gameState.correctAnswers / node.questions.length) * 100);
+            document.getElementById('accuracy-display').textContent = `${accuracy}%`;
+
+            const passed = accuracy >= 50;
+            if (passed) {
+                document.getElementById('level-status-title').textContent = 'Challenge Passed!';
+                document.getElementById('star-award').textContent = '⭐';
+                if (gameState.currentNodeIndex >= worldProgress.completedNodes) {
+                    worldProgress.completedNodes = gameState.currentNodeIndex + 1;
+                }
+                playSound('levelWin', 'G4', '4n');
+            } else {
+                document.getElementById('level-status-title').textContent = 'Challenge Failed!';
+                document.getElementById('star-award').textContent = 'Try Again!';
+            }
+            
+            showModal(dom.modals.levelComplete, true);
+            
+            if (node.type === 'case-study' && passed && !worldProgress.trophy) {
+                worldProgress.trophy = true;
+                setTimeout(() => {
+                    showModal(dom.modals.levelComplete, false);
+                    document.getElementById('trophy-award').textContent = world.trophy;
+                    showModal(dom.modals.worldComplete, true);
+                    playSound('trophyWin', 'C4');
+                    setTimeout(()=>playSound('trophyWin', 'E4'), 200);
+                    setTimeout(()=>playSound('trophyWin', 'G4'), 400);
+                    renderTrophies();
+                }, 1500);
+            }
+        }
+
+        function startCaseStudy(worldKey, nodeIndex) {
+            const caseStudy = gameData[worldKey].path[nodeIndex];
+            // Store the case study data in localStorage to be accessed by the new page
+            localStorage.setItem('currentCaseStudy', JSON.stringify(caseStudy));
+            localStorage.setItem('currentWorldKey', worldKey);
+            // Redirect to the case study page
+            window.location.href = './case-study.html';
+        }
+
+        function init() {
+            const defaultGameState = { hearts: 5, progress: {} };
+            for (const worldKey in gameData) {
+                defaultGameState.progress[worldKey] = { completedNodes: 0, trophy: false };
+            }
+
+            const savedState = localStorage.getItem('isotopeGameState');
+            if (savedState) {
+                let loadedState = JSON.parse(savedState);
+                gameState = {...defaultGameState, ...loadedState};
+                for (const worldKey in gameData) {
+                    gameState.progress[worldKey] = {
+                        ...defaultGameState.progress[worldKey],
+                        ...(loadedState.progress ? loadedState.progress[worldKey] : {})
+                    };
+                }
+            } else {
+                gameState = defaultGameState;
+            }
+
+            renderHearts();
+            renderTrophies();
+            renderWorlds();
+            showScreen('world-select-screen');
+
+            document.getElementById('back-to-worlds').onclick = () => {
+                renderWorlds();
+                showScreen('world-select-screen');
+            };
+            document.getElementById('next-level-btn').onclick = () => {
+                showModal(dom.modals.levelComplete, false);
+                selectWorld(gameState.currentWorld);
+            };
+            document.getElementById('collect-trophy-btn').onclick = () => {
+                showModal(dom.modals.worldComplete, false);
+                selectWorld(gameState.currentWorld);
+            };
+            document.getElementById('restart-game-btn').onclick = () => {
+                localStorage.removeItem('isotopeGameState');
+                window.location.reload();
+            };
+
+            setInterval(() => localStorage.setItem('isotopeGameState', JSON.stringify(gameState)), 5000);
+        }
+
+        init();
+    </script>
+</body>
+</html>

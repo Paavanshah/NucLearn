@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuclearn - Nuclear Economics Project</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #1a202c;
+            --bg-glass: rgba(45, 55, 72, 0.8);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-glow: #3b82f6;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(315deg, #1e293b, #2c3e50, #3b82f6, #1e293b);
+            background-size: 400% 400%;
+            animation: gradient-animation 20s ease infinite;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .glass-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+        }
+        .hero-section {
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+        .feature-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        /* Styles for the large logo on the homepage hero section */
+        .hero-logo {
+            height: 120px; /* Make it larger for prominence */
+            margin-bottom: 1.5rem;
+            animation: fadeInScale 1s ease-out forwards; /* Add animation for visibility on load */
+        }
+        /* Keyframe for logo animation */
+        @keyframes fadeInScale {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        /* Styles for the smaller logo in the navigation bar */
+        .nav-logo {
+            height: 40px; /* Adjust as needed */
+            margin-right: 1rem;
+        }
+        .intro-video {
+            width: 100%;
+            max-width: 700px; /* Adjust max-width as needed */
+            border-radius: 1rem;
+            margin-top: 2rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            /* Centering the video */
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body class="bg-bg-dark">
+
+    <!-- Navigation Header -->
+    <header class="w-full max-w-6xl mx-auto p-4 mb-8">
+        <nav class="glass-card flex justify-between items-center p-4 rounded-lg">
+            <div class="flex items-center">
+                <img src="./assets/Logo.png" alt="Nuclearn Logo" class="nav-logo">
+                <h1 class="text-2xl font-bold text-white">Nuclearn</h1>
+            </div>
+            <div class="flex space-x-4">
+                <a href="./index.html" class="text-white hover:text-blue-400 transition-colors">Home</a>
+                <a href="./game.html" class="text-white hover:text-blue-400 transition-colors">IsoAdventure</a>
+                <a href="./isotopedia.html" class="text-white hover:text-blue-400 transition-colors">Isotopedia</a>
+                <a href="./chatbot.html" class="text-white hover:text-blue-400 transition-colors">IsoBot</a>
+                <a href="./budget_game.html" class="text-white hover:text-blue-400 transition-colors">Budget Challenge</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 max-w-6xl flex-grow">
+        <section class="hero-section glass-card mb-12">
+            <img src="./assets/Logo.png" alt="Nuclearn Logo" class="hero-logo mx-auto">
+            <h1 class="text-6xl font-bold text-white mb-4" style="text-shadow: 0 0 15px var(--accent-glow);">Welcome to Nuclearn!</h1>
+            <p class="text-xl text-gray-300 mb-8">Explore the fascinating economic impacts of nuclear technologies beyond energy generation.</p>
+            
+            <!-- Introduction Video -->
+            <video class="intro-video" controls autoplay loop muted>
+                <source src="./assets/intro.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+
+            <a href="./game.html" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg text-xl hover:bg-blue-700 transition-colors shadow-lg mt-8 inline-block">Start Your Adventure</a>
+        </section>
+
+        <section class="mb-12">
+            <h2 class="text-4xl font-bold text-center text-white mb-8">Our Modules</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="feature-card glass-card p-6 text-center">
+                    <h3 class="text-2xl font-semibold text-white mb-3">IsoAdventure</h3>
+                    <p class="text-gray-300 mb-4">Test your knowledge and learn about nuclear economics through interactive quizzes and case studies.</p>
+                    <a href="./game.html" class="text-blue-400 hover:underline">Play Now &rarr;</a>
+                </div>
+                <div class="feature-card glass-card p-6 text-center">
+                    <h3 class="text-2xl font-semibold text-white mb-3">Isotopedia</h3>
+                    <p class="text-gray-300 mb-4">A comprehensive encyclopedia of isotopes and their economic applications.</p>
+                    <a href="./isotopedia.html" class="text-blue-400 hover:underline">Explore Isotopes &rarr;</a>
+                </div>
+                <div class="feature-card glass-card p-6 text-center">
+                    <h3 class="text-2xl font-semibold text-white mb-3">Budget Challenge</h3>
+                    <p class="text-gray-300 mb-4">Allocate funds to see how nuclear technology can save more lives at a lower cost.</p>
+                    <a href="./budget_game.html" class="text-blue-400 hover:underline">Play Budget Game &rarr;</a>
+                </div>
+                <div class="feature-card glass-card p-6 text-center">
+                    <h3 class="text-2xl font-semibold text-white mb-3">IsoBot - AI Economist</h3>
+                    <p class="text-gray-300 mb-4">Ask our AI expert any question about the economics of nuclear technologies.</p>
+                    <a href="./chatbot.html" class="text-blue-400 hover:underline">Chat with IsoBot &rarr;</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="w-full text-center text-gray-400 p-4 mt-8">
+        <p>&copy; 2025 Nuclearn. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>

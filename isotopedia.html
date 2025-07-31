@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isotopedia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #1a202c;
+            --bg-glass: rgba(45, 55, 72, 0.8);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-glow: #3b82f6;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(315deg, #1e293b, #2c3e50, #3b82f6, #1e293b);
+            background-size: 400% 400%;
+            animation: gradient-animation 20s ease infinite;
+            color: #e2e8f0;
+        }
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .glass-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+        }
+        .play-card {
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .play-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .play-card.flipped .play-card-inner {
+            transform: rotateY(180deg);
+        }
+        .play-card-front, .play-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1rem;
+            display: flex; /* Use flexbox for content alignment */
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 1.5rem; /* Add padding */
+        }
+        .play-card-back {
+            transform: rotateY(180deg);
+        }
+        .isotope-image {
+            width: 100%;
+            height: 120px; /* Fixed height for images */
+            object-fit: contain; /* Ensure image fits without cropping */
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            background-color: rgba(255,255,255,0.05); /* Placeholder background */
+        }
+        .logo {
+            height: 40px; /* Adjust as needed */
+            margin-right: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-bg-dark flex flex-col items-center min-h-screen">
+
+    <!-- Navigation Header -->
+    <header class="w-full max-w-6xl mx-auto p-4 mb-8">
+        <nav class="glass-card flex justify-between items-center p-4 rounded-lg">
+            <div class="flex items-center">
+                <img src="./assets/Logo.png" alt="Nuclearn Logo" class="logo">
+                <h1 class="text-2xl font-bold text-white">Nuclearn</h1>
+            </div>
+            <div class="flex space-x-4">
+                <a href="./index.html" class="text-white hover:text-blue-400 transition-colors">Home</a>
+                <a href="./game.html" class="text-white hover:text-blue-400 transition-colors">IsoAdventure</a>
+                <a href="./isotopedia.html" class="text-white hover:text-blue-400 transition-colors">Isotopedia</a>
+                <a href="./chatbot.html" class="text-white hover:text-blue-400 transition-colors">IsoBot</a>
+                <a href="./budget_game.html" class="text-white hover:text-blue-400 transition-colors">Budget Challenge</a>
+ 
+            </div>
+        </nav>
+    </header>
+
+    <div class="container mx-auto p-4 max-w-6xl">
+        <header class="flex justify-between items-center glass-card p-4 mb-8">
+            <h1 class="text-4xl font-bold text-white" style="text-shadow: 0 0 10px var(--accent-glow);">Isotopedia</h1>
+            <a href="./game.html" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors">Back to Game</a>
+        </header>
+
+        <div id="isotope-container" class="space-y-12">
+            <!-- Isotope sections will be generated here -->
+        </div>
+    </div>
+
+    <script>
+        const isotopeData = {
+            "Food Industry": [
+                { name: "Cobalt-60", symbol: "Co-60", element: "Cobalt", industry: "Food Irradiation", protons: 27, neutrons: 33, stability: "Radioactive", halfLife: "~5.27 years", use: "Disinfection and shelf-life extension of spices, meats, and produce.", special: "High-energy gamma emitter.", imageUrl: "./assets/cobalt 60.jpeg", economicImpact: "Reduces food spoilage, extending shelf life and reducing waste. Facilitates international trade by meeting phytosanitary standards, opening new markets for agricultural products. Can lower reliance on chemical preservatives." },
+                { name: "Cesium-137", symbol: "Cs-137", element: "Cesium", industry: "Food Irradiation", protons: 55, neutrons: 82, stability: "Radioactive", halfLife: "~30 years", use: "Less common for food irradiation, but a long-lived gamma source.", special: "Water-soluble, which limits some applications.", imageUrl: "./assets/cesium 137.jpeg", economicImpact: "Similar to Cobalt-60 in reducing spoilage, but its longer half-life means less frequent source replacement, potentially lowering long-term operational costs for large-scale facilities. Safety concerns due to solubility increase handling costs." },
+                { name: "Carbon-13", symbol: "C-13", element: "Carbon", industry: "Food Traceability", protons: 6, neutrons: 7, stability: "Stable", halfLife: "N/A", use: "Detects adulteration in honey and juices; traces origin of plant-based products.", special: "Its ratio to Carbon-12 reveals the metabolic pathway of plants (C3 vs C4).", imageUrl: "./assets/carbon 13.jpeg", economicImpact: "Enhances product authenticity and brand reputation, allowing premium pricing for verified products. Reduces economic losses from food fraud and builds consumer trust, which can lead to increased sales and market share." },
+                { name: "Nitrogen-15", symbol: "N-15", element: "Nitrogen", industry: "Food Authenticity", protons: 7, neutrons: 8, stability: "Stable", halfLife: "N/A", use: "Traces farming practices (e.g., organic vs. conventional) and verifies animal feed authenticity.", special: "Sensitive to the nitrogen source in the environment.", imageUrl: "./assets/nitrogen 15.jpeg", economicImpact: "Supports the economic value of organic and specialty farming by providing verifiable proof of practices. Helps prevent mislabeling, protecting both producers and consumers from economic deception. Can command higher prices for authenticated goods." },
+                { name: "Deuterium / Oxygen-18", symbol: "²H / ¹⁸O", element: "Hydrogen/Oxygen", industry: "Geographic Origin", protons: "1 / 8", neutrons: "1 / 10", stability: "Stable", halfLife: "N/A", use: "Traces the geographic origin of water in products like wine, honey, and meat.", special: "Isotope ratios reflect the rainfall and climate patterns of a region.", imageUrl: "./assets/duterium.jpeg", economicImpact: "Adds significant value to regional specialty products (e.g., protected designation of origin wines) by proving their authenticity. Combats counterfeiting, protecting the economic interests of legitimate producers and maintaining market integrity." }
+            ],
+            "Space Industry": [
+                { name: "Plutonium-238", symbol: "Pu-238", element: "Plutonium", industry: "Space Power & Heat", protons: 94, neutrons: 144, stability: "Radioactive", halfLife: "~87.7 years", use: "Powers RTGs and heater units for deep-space probes (Voyager, Cassini) and Mars rovers.", special: "Generates ~0.55 W/g of thermal power reliably for decades with low shielding needs.", imageUrl: "./assets/plutonium 238.jpeg", economicImpact: "Enables multi-decade deep-space missions that would be impossible with solar power, providing invaluable scientific data and technological advancements. High production cost, but the long lifespan provides an excellent return on investment for mission longevity." },
+                { name: "Americium-241", symbol: "Am-241", element: "Americium", industry: "Future Space Power", protons: 95, neutrons: 146, stability: "Radioactive", halfLife: "~432 years", use: "Considered as a potential long-lived alternative to Pu-238 for future European space missions.", special: "More widely available than Pu-238 but has lower power density and requires more shielding.", imageUrl: "./assets/americium 241.jpeg", economicImpact: "Offers a more accessible and potentially cheaper fuel source than Pu-238 for RTGs, reducing overall mission costs. Its longer half-life could enable even longer-duration missions, maximizing scientific return." }
+            ],
+            "Medical Industry": [
+                { name: "Technetium-99m", symbol: "Tc-99m", element: "Technetium", industry: "Diagnostic Imaging", protons: 43, neutrons: 56, stability: "Radioactive (Metastable)", halfLife: "~6 hours", use: "Used in ~80% of all nuclear medicine procedures, including bone, heart, and organ scans.", special: "Ideal gamma energy (140 keV) for imaging with a short half-life to minimize patient dose.", imageUrl: "./assets/technetium.jpeg", economicImpact: "Enables early and accurate diagnosis, leading to more effective and less costly treatments. Reduces the need for invasive procedures, lowering healthcare costs and improving patient outcomes. Supply chain stability is a major economic concern." },
+                { name: "Cobalt-60", symbol: "Co-60", element: "Cobalt", industry: "Radiotherapy & Sterilization", protons: 27, neutrons: 33, stability: "Radioactive", halfLife: "~5.27 years", use: "Used in teletherapy machines to treat cancer and to sterilize medical equipment on an industrial scale.", special: "Strong gamma ray penetration is suitable for both medical and industrial use.", imageUrl: "./assets/cobalt 60.jpeg", economicImpact: "Provides a cost-effective method for sterilizing large volumes of medical devices, ensuring patient safety and reducing healthcare-associated infections. In radiotherapy, offers a robust and reliable treatment option, especially in regions with less advanced infrastructure." },
+                { name: "Iodine-131", symbol: "I-131", element: "Iodine", industry: "Thyroid Treatment & Imaging", protons: 53, neutrons: 78, stability: "Radioactive", halfLife: "~8 days", use: "Treats thyroid disorders (hyperthyroidism) and thyroid cancer. Also used for diagnostic scans.", special: "Emits both beta particles (therapeutic) and gamma rays (diagnostic).", imageUrl: "./assets/iodine 131.jpeg", economicImpact: "Offers a highly effective and often curative treatment for thyroid conditions, preventing more costly and invasive surgical interventions. Its dual diagnostic/therapeutic capability streamlines patient care and reduces overall healthcare expenditures." },
+                { name: "Fluorine-18", symbol: "F-18", element: "Fluorine", industry: "PET Imaging", protons: 9, neutrons: 9, stability: "Radioactive", halfLife: "~1.8 hours", use: "The primary isotope for PET scans, often attached to a glucose molecule (FDG) to image metabolic activity in cancer, brain, and heart studies.", special: "Positron emitter, allowing for high-resolution 3D imaging.", imageUrl: "./assets/fluorine 18.jpg", economicImpact: "Enables precise staging of cancers and evaluation of treatment effectiveness, guiding oncologists to optimal, cost-effective therapies. Its short half-life necessitates local production (cyclotrons), creating regional economic hubs for radiopharmaceutical manufacturing." },
+                { name: "Strontium-89", symbol: "Sr-89", element: "Strontium", industry: "Pain Palliation", protons: 38, neutrons: 51, stability: "Radioactive", halfLife: "~50.5 days", use: "Relieves bone pain from cancers that have metastasized to the bone (e.g., prostate, breast).", special: "Chemically mimics calcium, so it is preferentially absorbed by bone tissue.", imageUrl: "./assets/strontium 89.jpeg", economicImpact: "Improves the quality of life for cancer patients, potentially reducing the need for expensive pain management interventions and hospitalizations. While not curative, it provides significant economic benefit by managing symptoms and allowing patients to remain active." }
+            ],
+            "Industrial Applications": [
+                { name: "Iridium-192", symbol: "Ir-192", element: "Iridium", industry: "Industrial Radiography", protons: 77, neutrons: 115, stability: "Radioactive", halfLife: "~73.8 days", use: "Used for Non-Destructive Testing (NDT) to inspect welds and materials in pipelines, aerospace, and construction.", special: "High gamma energy allows penetration of dense materials.", imageUrl: "./assets/iridium-192.jpg", economicImpact: "Prevents catastrophic infrastructure failures (e.g., pipeline bursts, bridge collapses) by detecting hidden flaws, saving billions in potential damages, environmental cleanup, and loss of life. Ensures product quality and safety, reducing warranty claims and recalls." },
+                { name: "Americium-241", symbol: "Am-241", element: "Americium", industry: "Smoke Detectors", protons: 95, neutrons: 146, stability: "Radioactive", halfLife: "~432 years", use: "Commonly used in ionization-type smoke detectors.", special: "Alpha emitter, which ionizes the air between two electrodes.", imageUrl: "./assets/americium 241.jpeg", economicImpact: "Enables the mass production of low-cost, highly effective smoke detectors, significantly reducing property damage and fatalities from fires. The long half-life means detectors can operate for many years without maintenance." },
+                { name: "Krypton-85", symbol: "Kr-85", element: "Krypton", industry: "Leak Detection & Gauging", protons: 36, neutrons: 49, stability: "Radioactive", halfLife: "~10.7 years", use: "Used in leak detection systems for sealed components and for thickness gauging in manufacturing.", special: "Beta emitter, useful for measuring thin materials.", imageUrl: "./assets/krypton-85.jpeg", economicImpact: "Minimizes material waste and ensures product quality in industries like plastics and paper by precisely controlling thickness. Reduces downtime and product loss by quickly identifying leaks in sealed systems, improving operational efficiency." },
+                { name: "Cobalt-60", symbol: "Co-60", element: "Cobalt", industry: "Industrial Sterilization", protons: 27, neutrons: 33, stability: "Radioactive", halfLife: "~5.27 years", use: "Sterilization of industrial products (e.g., medical devices, cosmetics, packaging) and wastewater treatment.", special: "High gamma energy allows penetration of bulk materials.", imageUrl: "./assets/cobalt 60.jpeg", economicImpact: "Provides a highly effective and scalable method for sterilizing a wide range of products that cannot withstand heat or chemicals, opening new markets for heat-sensitive materials. Ensures product safety and compliance with regulatory standards, reducing liability risks." },
+                { name: "Deuterium", symbol: "²H", element: "Hydrogen", industry: "Optical Fiber Manufacturing", protons: 1, neutrons: 1, stability: "Stable", halfLife: "N/A", use: "Used to reduce signal loss in optical fibers, especially for long-haul communication.", special: "Its presence in the silica lattice reduces hydroxyl radical formation, which absorbs light.", imageUrl: "./assets/duterium.jpeg", economicImpact: "Improves the efficiency and reach of global communication networks by enabling longer, clearer optical fiber runs. Reduces the need for signal repeaters, lowering infrastructure costs and improving data transmission reliability, a critical factor for the digital economy." }
+            ]
+        };
+
+        const container = document.getElementById('isotope-container');
+
+        for (const category in isotopeData) {
+            // Create category title
+            const categoryHeader = document.createElement('h2');
+            categoryHeader.className = 'text-3xl font-bold text-white border-b-2 border-gray-700 pb-2 mb-6';
+            categoryHeader.textContent = category;
+            container.appendChild(categoryHeader);
+
+            // Create grid for cards
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8';
+            container.appendChild(grid);
+
+            isotopeData[category].forEach(isotope => {
+                const cardContainer = document.createElement('div');
+                cardContainer.className = 'play-card h-96'; // Increased height to accommodate image and text
+                cardContainer.innerHTML = `
+                    <div class="play-card-inner">
+                        <div class="play-card-front glass-card p-6 flex flex-col justify-between">
+                            <div>
+                                <img src="${isotope.imageUrl}" alt="${isotope.name}" class="isotope-image mb-4">
+                                <p class="text-gray-400 text-sm">${isotope.element}</p>
+                                <h3 class="text-3xl font-bold text-white">${isotope.name} (${isotope.symbol})</h3>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-semibold text-blue-400">${isotope.industry}</p>
+                            </div>
+                            <p class="text-xs text-gray-400 text-center mt-2">Click to flip for details</p>
+                        </div>
+                        <div class="play-card-back glass-card p-6 text-sm flex flex-col justify-between">
+                            <ul class="space-y-1">
+                                <li><strong>Protons:</strong> ${isotope.protons}</li>
+                                <li><strong>Neutrons:</strong> ${isotope.neutrons}</li>
+                                <li><strong>Stability:</strong> ${isotope.stability}</li>
+                                <li><strong>Half-Life:</strong> ${isotope.halfLife}</li>
+                                <li class="mt-2"><strong>Use:</strong> ${isotope.use}</li>
+                                <li class="mt-2"><strong>Special Property:</strong> ${isotope.special}</li>
+                                <li class="mt-2"><strong>Economic Impact:</strong> ${isotope.economicImpact}</li>
+                            </ul>
+                            <p class="text-xs text-gray-400 text-center mt-2">Click to flip back</p>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(cardContainer);
+            });
+        }
+        
+        document.querySelectorAll('.play-card').forEach(card => {
+            card.addEventListener('click', () => {
+                card.classList.toggle('flipped');
+            });
+        });
+    </script>
+</body>
+</html>

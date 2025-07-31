@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IsoBot - AI Nuclear Economist</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-dark: #1a202c;
+            --bg-glass: rgba(45, 55, 72, 0.8);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-glow: #3b82f6;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(315deg, #1e293b, #2c3e50, #3b82f6, #1e293b);
+            background-size: 400% 400%;
+            animation: gradient-animation 20s ease infinite;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .glass-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+        }
+        #chat-window {
+            height: 60vh;
+            background-color: rgba(23, 30, 42, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .chat-message {
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
+            max-width: 80%;
+            line-height: 1.6;
+        }
+        .user-message {
+            background-color: #3b82f6;
+            color: white;
+            align-self: flex-end;
+        }
+        .ai-message {
+            background-color: #374151;
+            color: #e5e7eb;
+            align-self: flex-start;
+        }
+        .ai-message ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        .ai-message li {
+            margin-bottom: 0.25rem;
+        }
+        .suggestion-btn {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: #d1d5db;
+            transition: all 0.2s ease-in-out;
+        }
+        .suggestion-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-glow);
+        }
+        .leading-questions-container {
+            align-self: flex-start;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: 80%;
+            width: 100%;
+            margin-top: -0.5rem;
+            padding-left: 0.5rem;
+        }
+        .loader {
+            border: 4px solid #374151;
+            border-top: 4px solid var(--accent-glow);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            align-self: flex-start;
+        }
+        #chat-input {
+            resize: none;
+            overflow-y: hidden;
+            background-color: #374151;
+            border-color: #4b5563;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .nav-logo {
+            height: 40px; /* Adjust as needed */
+            margin-right: 1rem;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-bg-dark flex flex-col items-center min-h-screen">
+
+    <!-- Navigation Header -->
+    <header class="w-full max-w-6xl mx-auto p-4 mb-8">
+        <nav class="glass-card flex justify-between items-center p-4 rounded-lg">
+            <div class="flex items-center">
+                <img src="./assets/Logo.png" alt="Nuclearn Logo" class="nav-logo">
+                <h1 class="text-2xl font-bold text-white">Nuclearn</h1>
+            </div>
+            <div class="flex space-x-4">
+                <a href="./index.html" class="text-white hover:text-blue-400 transition-colors">Home</a>
+                <a href="./game.html" class="text-white hover:text-blue-400 transition-colors">IsoAdventure</a>
+                <a href="./isotopedia.html" class="text-white hover:text-blue-400 transition-colors">Isotopedia</a>
+                <a href="./chatbot.html" class="text-white hover:text-blue-400 transition-colors">IsoBot</a>
+                <a href="./budget_game.html" class="text-white hover:text-blue-400 transition-colors">Budget Challenge</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container mx-auto p-4 max-w-3xl">
+        <header class="text-center my-8">
+            <h1 class="text-5xl font-bold text-white" style="text-shadow: 0 0 10px var(--accent-glow);">IsoBot - AI Economist</h1>
+            <p class="text-xl text-gray-300 mt-2">Your expert on the economics of non-energy nuclear applications.</p>
+        </header>
+
+        <main class="glass-card p-6">
+            <!-- Chat Window -->
+            <div id="chat-window">
+                <div class="ai-message">
+                    Hello! I am an AI expert on the economics of nuclear technologies. How can I help you today?
+                </div>
+            </div>
+
+            <!-- Suggested Questions -->
+            <div id="suggestions" class="py-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button class="suggestion-btn text-left p-2 rounded-md text-sm">Compare the cost of sterilizing medical equipment with Cobalt-60 vs. ethylene oxide.</button>
+                <button class="suggestion-btn text-left p-2 rounded-md text-sm">Give me a simple problem about the economic benefit of using isotopes to improve crop yields.</button>
+                <button class="suggestion-btn text-left p-2 rounded-md text-sm">What are the economic advantages of using radioisotopes for non-destructive testing (NDT) in industry?</button>
+                 <button class="suggestion-btn text-left p-2 rounded-md text-sm">Explain the economic impact of Technetium-99m shortages in hospitals.</button>
+            </div>
+
+            <!-- Input Area -->
+            <div class="mt-2 flex gap-2 items-end">
+                <textarea id="chat-input" class="flex-grow block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2" placeholder="Ask a question..." rows="1"></textarea>
+                <button id="send-button" class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 self-end h-10">
+                    Send
+                </button>
+                <button id="clear-button" class="inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 self-end h-10">
+                    Clear
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- DOM ELEMENT REFERENCES ---
+        const chatWindow = document.getElementById('chat-window');
+        const chatInput = document.getElementById('chat-input');
+        const sendButton = document.getElementById('send-button');
+        const clearButton = document.getElementById('clear-button');
+        const suggestionsContainer = document.getElementById('suggestions');
+
+        /**
+         * Appends a message to the chat window.
+         * This function now has more robust markdown-to-HTML conversion.
+         * @param {string} text - The message text.
+         * @param {string} sender - 'user' or 'ai'.
+         */
+        function addMessageToChat(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${sender}-message`;
+
+            if (sender === 'user') {
+                messageDiv.textContent = text;
+                chatWindow.appendChild(messageDiv);
+            } else {
+                // For AI messages, parse for leading questions and format the text.
+                const questionRegex = /\[(.*?)\]/g;
+                const leadingQuestions = text.match(questionRegex);
+                const cleanedText = text.replace(questionRegex, '').trim();
+
+                // 1. Convert **bold** to <strong>
+                let html = cleanedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                // 2. Convert lists (* item) to HTML lists
+                const lines = html.split('\n');
+                let inList = false;
+                const processedLines = lines.map(line => {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine.startsWith('* ')) {
+                        const listItem = `<li>${trimmedLine.substring(2)}</li>`;
+                        if (!inList) {
+                            inList = true;
+                            return `<ul>${listItem}`;
+                        }
+                        return listItem;
+                    } else {
+                        if (inList) {
+                            inList = false;
+                            return `</ul>${line}`;
+                        }
+                        return line;
+                    }
+                });
+                if (inList) processedLines.push('</ul>');
+                html = processedLines.join('<br>').replace(/<\/ul><br><ul>/g, '');
+
+                messageDiv.innerHTML = html;
+                chatWindow.appendChild(messageDiv);
+
+                // 3. Create and append leading question buttons
+                if (leadingQuestions && leadingQuestions.length > 0) {
+                    const questionsContainer = document.createElement('div');
+                    questionsContainer.className = 'leading-questions-container';
+
+                    leadingQuestions.forEach(q => {
+                        const questionText = q.slice(1, -1); // Remove brackets
+                        const btn = document.createElement('button');
+                        btn.className = 'suggestion-btn text-left p-2 rounded-md text-sm';
+                        btn.textContent = questionText;
+                        btn.onclick = () => {
+                            chatInput.value = questionText;
+                            handleSend();
+                        };
+                        questionsContainer.appendChild(btn);
+                    });
+                    chatWindow.appendChild(questionsContainer);
+                }
+            }
+
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+        
+        /**
+         * Main function to interact with the Gemini API.
+         * @param {string} userQuestion - The question from the user.
+         */
+        async function askAIAnalyst(userQuestion) {
+            // IMPORTANT: The API key has been inserted.
+            const API_KEY = "AIzaSyDnO7RSC45euxBo4PJWutbALrn75qmv0ac";
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
+            
+            addMessageToChat(userQuestion, 'user');
+            suggestionsContainer.style.display = 'none'; // Hide suggestions after first question
+            
+            // Add a loading indicator
+            const loader = document.createElement('div');
+            loader.className = 'loader';
+            chatWindow.appendChild(loader);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            // --- THIS IS THE MOST IMPORTANT PART: THE SYSTEM PROMPT ---
+            const systemPrompt = `
+                You are 'IsoBot,' an expert AI analyst. Your primary expertise is educating users on the economic issues of non-energy applications of nuclear technologies.
+
+                Your core knowledge base covers:
+                - **Medicine:** Economics of medical isotopes like Technetium-99m, Cobalt-60.
+                - **Industry:** Economic benefits of industrial radiography (NDT), process optimization (tracers).
+                - **Agriculture:** Cost-benefit analyses of using isotopes for improving crop yields, pest control, and food irradiation.
+                - **Space:** Economic implications of RTGs.
+
+                When a user asks a question, you MUST follow these rules:
+                1.  **Prioritize Core Topics:** If the question is about your core expertise (nuclear economics), answer it thoroughly and expertly.
+                2.  **Answer General Questions:** If the user asks a general knowledge question (like "what is the GDP of Russia?"), provide a concise and accurate answer.
+                3.  **Bridge Back to Topic:** After answering a general question, you MUST smoothly transition the conversation back to your area of expertise. For example: "The GDP of Russia was approximately $X trillion in year Y. Speaking of national economies, a robust domestic medical isotope supply chain can significantly contribute to a nation's technological and healthcare sectors. Would you like to explore the economic impact of that?"
+                4.  **Maintain Persona:** Always be helpful, insightful, and act as an expert economist.
+                5.  **Structure and Formatting:** Structure your answers with clear headings and bullet points. Use **bold** for key terms and * for bullet points on new lines.
+                6.  **Provide Leading Questions:** After answering a core topic question, provide 2-3 relevant follow-up questions to guide the user. Each question MUST be enclosed in square brackets. For example: [What is the market size for deuterated drugs?] [How does Cobalt-60 compare to e-beam for sterilization?]
+
+                The user has asked the following question: "${userQuestion}"
+
+                Analyze the user's question. If it's within your core expertise, provide a detailed answer. If it's a general question, provide a concise answer and then bridge back to nuclear economics.
+            `;
+
+            const payload = {
+                contents: [{ parts: [{ text: systemPrompt }] }]
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    throw new Error(`API request failed with status ${response.status}: ${errorBody}`);
+                }
+
+                const result = await response.json();
+                chatWindow.removeChild(loader); // Remove loader
+
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content) {
+                    const aiResponse = result.candidates[0].content.parts[0].text;
+                    addMessageToChat(aiResponse, 'ai');
+                } else {
+                    addMessageToChat("I'm sorry, I couldn't generate a response. The response from the AI was empty. Please try rephrasing your question.", 'ai');
+                }
+
+            } catch (error) {
+                console.error("Error calling AI Analyst:", error);
+                chatWindow.removeChild(loader);
+                addMessageToChat("An error occurred while contacting the AI analyst. This could be due to an invalid API key, network issues, or a problem with the AI service. Please check the console for details.", 'ai');
+            }
+        }
+        
+        function handleSend() {
+            const question = chatInput.value.trim();
+            if (question) {
+                askAIAnalyst(question);
+                chatInput.value = '';
+                chatInput.style.height = 'auto'; // Reset height
+            }
+        }
+
+        function clearChat() {
+            // Remove all messages from the chat window
+            chatWindow.innerHTML = '';
+
+            // Add the initial greeting back
+            addMessageToChat('Hello! I am an AI expert on the economics of nuclear technologies. How can I help you today?', 'ai');
+
+            // Show the suggestion buttons again
+            suggestionsContainer.style.display = 'grid';
+        }
+
+        // --- EVENT LISTENERS ---
+        sendButton.addEventListener('click', handleSend);
+        clearButton.addEventListener('click', clearChat);
+
+        chatInput.addEventListener('input', () => {
+            // Auto-resize the textarea
+            chatInput.style.height = 'auto';
+            chatInput.style.height = (chatInput.scrollHeight) + 'px';
+        });
+
+        chatInput.addEventListener('keydown', (e) => {
+            // Send on Enter, but allow new lines with Shift+Enter
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); // Prevent new line
+                handleSend();
+            }
+        });
+
+        suggestionsContainer.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                const question = e.target.textContent;
+                chatInput.value = question;
+                handleSend();
+            }
+        });
+
+    </script>
+</body>
+</html>

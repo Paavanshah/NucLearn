@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuclearn - Build Your Budget Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #1a202c;
+            --bg-glass: rgba(45, 55, 72, 0.8);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-glow: #3b82f6;
+            --correct-glow: #22c55e;
+            --incorrect-glow: #ef4444;
+            --warning-glow: #f59e0b;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(315deg, #1e293b, #2c3e50, #3b82f6, #1e293b);
+            background-size: 400% 400%;
+            animation: gradient-animation 20s ease infinite;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .glass-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+        }
+        .nav-logo {
+            height: 40px; /* Adjust as needed */
+            margin-right: 1rem;
+        }
+        .option-card {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            min-height: 250px; /* Ensure cards have a consistent height */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: var(--accent-glow);
+        }
+        .option-card.selected {
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 25px -5px var(--accent-glow);
+            transform: scale(1.02);
+        }
+        .result-box {
+            border-left: 4px solid var(--accent-glow);
+            padding-left: 1rem;
+        }
+        .lives-saved {
+            color: var(--correct-glow);
+            font-weight: bold;
+        }
+        .cost-display {
+            color: #f59e0b; /* Amber for cost */
+            font-weight: bold;
+        }
+        .message-box {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-left: 4px solid var(--accent-glow);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+        .event-box {
+            background-color: rgba(245, 158, 11, 0.2);
+            border-left: 44px solid var(--warning-glow);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+        /* Dropdown specific styles */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--bg-glass);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            top: 100%; /* Position below the parent link */
+            left: 0;
+            padding: 0.5rem 0;
+        }
+        .dropdown-content a {
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+            transition: background-color 0.2s;
+        }
+        .dropdown-content a:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-bg-dark">
+
+    <!-- Navigation Header -->
+    <header class="w-full max-w-6xl mx-auto p-4 mb-8">
+        <nav class="glass-card flex justify-between items-center p-4 rounded-lg">
+            <div class="flex items-center">
+                <img src="./assets/Logo.png" alt="Nuclearn Logo" class="nav-logo">
+                <h1 class="text-2xl font-bold text-white">Nuclearn</h1>
+            </div>
+            <div class="flex space-x-4">
+                <a href="./index.html" class="text-white hover:text-blue-400 transition-colors">Home</a>
+                <a href="./game.html" class="text-white hover:text-blue-400 transition-colors">IsoAdventure</a>
+                <a href="./isotopedia.html" class="text-white hover:text-blue-400 transition-colors">Isotopedia</a>
+                <a href="./chatbot.html" class="text-white hover:text-blue-400 transition-colors">IsoBot</a>
+                
+                <!-- Budget Challenge Dropdown -->
+                <div class="dropdown">
+                    <a href="#" class="text-white hover:text-blue-400 transition-colors cursor-pointer" onclick="toggleDropdown(event)">Budget Challenge <span class="ml-1">&#9660;</span></a>
+                    <div class="dropdown-content" id="budgetChallengeDropdown">
+                        <a href="./budget_game.html">Level 1</a>
+                        <a href="./budget_challenge_level2.html">Level 2</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 max-w-4xl flex-grow">
+        <section class="glass-card p-8 mb-8 text-center">
+            <h1 class="text-5xl font-bold text-white mb-4" style="text-shadow: 0 0 10px var(--accent-glow);">Build Your Budget: Nuclear or Not?</h1>
+            <p class="text-xl text-gray-300 mb-6">Navigate your country's public health budget over <span id="total-rounds"></span> rounds. Make strategic investments to save lives and manage your finances!</p>
+            
+            <div class="flex justify-around items-center mb-6 text-2xl font-bold">
+                <p>Round: <span id="current-round-display" class="text-blue-400">1</span> / <span id="total-rounds-display"></span></p>
+                <p>Budget: <span id="current-budget-display" class="text-green-400">₹100 Crore</span></p>
+                <p>Total Lives Saved: <span id="total-lives-saved-display" class="lives-saved">0</span></p>
+            </div>
+
+            <div id="event-message" class="event-box text-left hidden">
+                <p class="font-bold text-lg text-yellow-300">🚨 Event Alert! 🚨</p>
+                <p id="event-text" class="text-gray-200 mt-2"></p>
+            </div>
+
+            <p class="text-2xl font-semibold text-white mt-8 mb-8">What will be your investment this round?</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Investment options will be dynamically rendered here -->
+            </div>
+
+            <div id="round-result-message" class="message-box hidden">
+                <p id="round-message-text" class="text-lg text-gray-200"></p>
+            </div>
+            <p id="instruction-message" class="text-sm text-gray-400 mt-2 hidden">Select an option above, then click "Next Round" to proceed.</p>
+
+
+            <button id="next-round-btn" class="mt-8 w-full bg-blue-600 text-white font-bold py-4 rounded-xl text-lg hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 hidden">Next Round</button>
+            <button id="finish-game-btn" class="mt-8 w-full bg-green-600 text-white font-bold py-4 rounded-xl text-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 hidden">Finish Game</button>
+
+
+            <div id="final-score-display" class="glass-card p-6 mt-12 hidden">
+                <h2 class="text-4xl font-bold text-center mb-4">Game Over!</h2>
+                <div class="result-box text-left mx-auto max-w-lg">
+                    <p class="text-xl text-white mb-2">Remaining Budget: <span id="final-budget" class="cost-display"></span></p>
+                    <p class="text-xl text-white mb-4">Total Lives Saved: <span id="final-lives" class="lives-saved"></span></p>
+                    <p id="game-outcome-message" class="text-2xl font-semibold text-white mt-6"></p>
+                </div>
+                <button id="restart-game-btn" class="mt-8 bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700">Play Again</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="w-full text-center text-gray-400 p-4 mt-8">
+        <p>&copy; 2025 Nuclearn. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // --- Game Configuration ---
+        const INITIAL_BUDGET = 100; // Crore
+        const TOTAL_ROUNDS = 4; // Changed from 5 to 4 rounds
+
+        const investmentOptions = {
+            'option-a': {
+                name: 'Build 1 huge, state-of-the-art hospital',
+                cost: 45, // Crore (Adjusted)
+                livesSaved: 50000,
+                description: 'Focus: Direct patient care & emergency services. High upfront cost, but immediate impact.'
+            },
+            'option-b': {
+                name: 'Deploy 10 Cobalt-60 sterilization units',
+                cost: 25, // Crore (Adjusted)
+                livesSaved: 250000,
+                description: 'Focus: Preventing infections & ensuring sterile medical supplies for all hospitals. Cost-effective, wide-reaching impact.'
+            },
+            'option-c': {
+                name: 'Invest in Radiation-Mutated Crop Research Program',
+                cost: 15, // Crore (Adjusted)
+                livesSaved: 100000, // Long-term impact, per year
+                description: 'Focus: Food security & enhanced crop yields. Lower cost, but lives saved are realized over time through improved food supply.'
+            },
+            'option-d': {
+                name: 'Fund Isotope-based Water Purification Plants',
+                cost: 35, // Crore (Adjusted)
+                livesSaved: 180000,
+                description: 'Focus: Clean water access & disease prevention. Significant cost, but addresses a fundamental health need.'
+            },
+            'option-e': {
+                name: 'Develop Advanced Industrial Radiography (NDT) Tech',
+                cost: 20, // Crore (Adjusted)
+                livesSaved: 120000, // Lives saved indirectly by preventing industrial accidents
+                description: 'Focus: Infrastructure safety & industrial efficiency. Prevents catastrophic failures and protects workers/public.'
+            },
+            'option-f': {
+                name: 'Launch Small-Scale RTG Powered Remote Sensors',
+                cost: 10, // Crore (Adjusted)
+                livesSaved: 60000, // Lives saved from early disaster detection (e.g., environmental monitoring)
+                description: 'Focus: Environmental monitoring & disaster prediction. Long-term, reliable data collection in remote areas.'
+            }
+        };
+
+        const randomEvents = [
+            {
+                name: "Unexpected Disease Outbreak!",
+                type: "negative",
+                impact: { budget: -10, lives: -25000 }, // Reduced impact
+                message: "A new viral strain has emerged! Your public health system is strained. (-₹10 Crore, -25,000 lives if unaddressed)",
+                mitigation: {
+                    optionId: 'option-b', // Cobalt-60 units are effective against this
+                    successMessage: "Your investment in sterilization units helped contain the outbreak!",
+                    failMessage: "The outbreak worsened due to lack of widespread sterilization."
+                }
+            },
+            {
+                name: "Global Economic Recession!",
+                type: "negative",
+                impact: { budget: -15 }, // Reduced impact
+                message: "The global economy is struggling, impacting your national budget. (-₹15 Crore)",
+                mitigation: null // No direct mitigation via investments
+            },
+            {
+                name: "Scientific Breakthrough!",
+                type: "positive",
+                impact: { lives: 75000 }, // Same impact
+                message: "Your nation's scientists made a breakthrough in medical treatment! (+75,000 lives)",
+                mitigation: null
+            },
+            {
+                name: "Agricultural Blight!",
+                type: "negative",
+                impact: { lives: -40000 }, // Reduced impact
+                message: "A devastating blight is affecting staple crops, leading to food insecurity. (-40,000 lives)",
+                mitigation: {
+                    optionId: 'option-c', // Crop research helps here
+                    successMessage: "Your crop research program mitigated the blight's impact!",
+                    failMessage: "The blight led to severe food shortages."
+                }
+            },
+            {
+                name: "Infrastructure Failure!",
+                type: "negative",
+                impact: { budget: -20, lives: -15000 }, // Reduced impact
+                message: "A critical piece of national infrastructure has failed, causing widespread disruption and casualties. (-₹20 Crore, -15,000 lives)",
+                mitigation: {
+                    optionId: 'option-e', // NDT tech helps prevent this
+                    successMessage: "Your advanced NDT technology detected the flaw early, averting disaster!",
+                    failMessage: "Lack of advanced inspection led to the failure."
+                }
+            },
+            {
+                name: "Environmental Disaster!",
+                type: "negative",
+                impact: { budget: -15, lives: -20000 }, // Reduced impact
+                message: "A major environmental pollution event has occurred, impacting public health. (-₹15 Crore, -20,000 lives)",
+                mitigation: {
+                    optionId: 'option-d', // Water purification helps here
+                    successMessage: "Your water purification investments helped contain the environmental damage and protect citizens!",
+                    failMessage: "The environmental disaster severely impacted public health due to insufficient clean water infrastructure."
+                }
+            },
+            {
+                name: "New Energy Discovery!",
+                type: "positive",
+                impact: { budget: 20 }, // Gain 20 Cr
+                message: "New, efficient energy resources discovered, boosting national revenue! (+₹20 Crore)",
+                mitigation: null
+            },
+            {
+                name: "Skilled Workforce Exodus!",
+                type: "negative",
+                impact: { budget: -10, lives: -10000 },
+                message: "A significant portion of your skilled workforce has emigrated, impacting productivity and health services. (-₹10 Crore, -10,000 lives)",
+                mitigation: null
+            },
+            {
+                name: "International Aid Package!",
+                type: "positive",
+                impact: { budget: 25 },
+                message: "Your country received a generous international aid package for public health initiatives! (+₹25 Crore)",
+                mitigation: null
+            },
+            {
+                name: "Public Health Campaign Success!",
+                type: "positive",
+                impact: { lives: 30000 },
+                message: "A national public health campaign achieved unexpected success, improving citizen well-being! (+30,000 lives)",
+                mitigation: null
+            }
+        ];
+
+        // --- Game State ---
+        let currentBudget = INITIAL_BUDGET;
+        let totalLivesSaved = 0;
+        let currentRound = 1;
+        let selectedOptionId = null;
+
+        // --- DOM Elements ---
+        const currentRoundDisplay = document.getElementById('current-round-display');
+        const totalRoundsDisplay = document.getElementById('total-rounds-display');
+        const currentBudgetDisplay = document.getElementById('current-budget-display');
+        const totalLivesSavedDisplay = document.getElementById('total-lives-saved-display');
+        const eventMessageBox = document.getElementById('event-message');
+        const eventText = document.getElementById('event-text');
+        const optionCardsContainer = document.querySelector('.grid.gap-8'); // Select the grid container
+        const roundResultMessage = document.getElementById('round-result-message');
+        const roundMessageText = document.getElementById('round-message-text');
+        const instructionMessage = document.getElementById('instruction-message');
+        const nextRoundBtn = document.getElementById('next-round-btn');
+        const finishGameBtn = document.getElementById('finish-game-btn');
+        const finalScoreDisplay = document.getElementById('final-score-display');
+        const finalBudgetSpan = document.getElementById('final-budget'); // Now "Remaining Budget"
+        const finalLivesSpan = document.getElementById('final-lives');
+        const gameOutcomeMessage = document.getElementById('game-outcome-message');
+        const restartGameBtn = document.getElementById('restart-game-btn');
+
+        // --- Game Functions ---
+
+        function updateDisplay() {
+            currentRoundDisplay.textContent = currentRound;
+            totalRoundsDisplay.textContent = TOTAL_ROUNDS;
+            currentBudgetDisplay.textContent = `₹${currentBudget} Crore`;
+            totalLivesSavedDisplay.textContent = totalLivesSaved.toLocaleString();
+        }
+
+        function renderOptions() {
+            optionCardsContainer.innerHTML = ''; // Clear existing options
+            Object.keys(investmentOptions).forEach(id => {
+                const option = investmentOptions[id];
+                const cardDiv = document.createElement('div');
+                cardDiv.id = id;
+                // Add a 'can-afford' class for visual indication and enable/disable
+                const canAfford = currentBudget >= option.cost;
+                cardDiv.className = `option-card glass-card p-6 border-2 border-transparent rounded-lg flex flex-col items-center justify-between ${canAfford ? '' : 'opacity-50 cursor-not-allowed'}`;
+                cardDiv.innerHTML = `
+                    <h3 class="text-3xl font-bold text-white mb-4">${option.name}</h3>
+                    <p class="text-xl text-gray-300 mb-4">${option.description}</p>
+                    <p class="text-lg text-gray-400 mt-auto">Cost: <span class="cost-display">₹${option.cost} Crore</span></p>
+                    <p class="text-lg text-gray-400">Lives Saved: <span class="lives-saved">${option.livesSaved.toLocaleString()}</span></p>
+                    <button class="select-btn mt-6 bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 ${canAfford ? '' : 'bg-gray-500 hover:bg-gray-500 cursor-not-allowed'}" ${canAfford ? '' : 'disabled'}>Select</button>
+                `;
+                optionCardsContainer.appendChild(cardDiv);
+            });
+            // Re-attach event listeners to new buttons
+            document.querySelectorAll('.select-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    if (!event.target.disabled) {
+                        selectOptionCard(event.target.closest('.option-card').id);
+                    }
+                });
+            });
+            instructionMessage.classList.remove('hidden');
+        }
+
+        function selectOptionCard(optionId) {
+            selectedOptionId = optionId;
+            document.querySelectorAll('.option-card').forEach(card => card.classList.remove('selected'));
+            document.getElementById(optionId).classList.add('selected');
+            
+            // Disable all selection buttons immediately after a choice is made
+            document.querySelectorAll('.select-btn').forEach(button => button.disabled = true);
+            document.querySelectorAll('.option-card').forEach(card => card.style.cursor = 'not-allowed');
+
+            processRound();
+        }
+
+        function processRound() {
+            const chosenOption = investmentOptions[selectedOptionId];
+            let roundLivesSaved = 0;
+            let roundMessage = "";
+            let eventMessage = "";
+            let eventOccurred = false;
+
+            // Log initial state for debugging
+            console.log(`--- Round ${currentRound} ---`);
+            console.log(`Initial Budget: ${currentBudget}, Total Lives Saved: ${totalLivesSaved}`);
+            console.log(`Chosen Option: ${chosenOption.name}, Cost: ${chosenOption.cost}, Lives: ${chosenOption.livesSaved}`);
+
+            // Check if player has enough budget for the chosen option
+            if (currentBudget >= chosenOption.cost) {
+                currentBudget -= chosenOption.cost;
+                roundLivesSaved = chosenOption.livesSaved;
+                totalLivesSaved += roundLivesSaved;
+                roundMessage = `You invested in "${chosenOption.name}". This cost ₹${chosenOption.cost} Crore and saved ${chosenOption.livesSaved.toLocaleString()} lives this round.`;
+            } else {
+                roundMessage = `You selected "${chosenOption.name}", but you only have ₹${currentBudget} Crore. You needed ₹${chosenOption.cost} Crore. No investment was made this round, and no lives were saved from this action.`;
+            }
+            
+            // Apply random event
+            const event = getRandomEvent();
+            if (event) {
+                eventOccurred = true;
+                eventMessage = event.message;
+
+                if (event.type === "negative") {
+                    let mitigated = false;
+                    // Check for mitigation *before* applying negative impact
+                    if (event.mitigation && selectedOptionId === event.mitigation.optionId) {
+                        eventMessage += `\n${event.mitigation.successMessage}`;
+                        mitigated = true;
+                    } else if (event.mitigation) {
+                        eventMessage += `\n${event.mitigation.failMessage}`;
+                    }
+
+                    if (!mitigated) {
+                        if (event.impact.budget) currentBudget += event.impact.budget; // impact.budget is negative
+                        if (event.impact.lives) totalLivesSaved += event.impact.lives; // impact.lives is negative
+                    }
+                } else if (event.type === "positive") {
+                    if (event.impact.lives) totalLivesSaved += event.impact.lives;
+                    // Positive event message is already included in eventMessage
+                }
+            }
+
+            // Log state after investment and event
+            console.log(`Budget after investment & event: ${currentBudget}, Total Lives Saved after investment & event: ${totalLivesSaved}`);
+
+            // Display round messages
+            roundResultMessage.classList.remove('hidden');
+            roundMessageText.textContent = roundMessage;
+            if (eventOccurred) {
+                eventMessageBox.classList.remove('hidden');
+                eventText.textContent = eventMessage;
+            } else {
+                eventMessageBox.classList.add('hidden');
+            }
+            instructionMessage.classList.add('hidden'); // Hide instruction after selection
+
+            updateDisplay();
+            
+            if (currentRound < TOTAL_ROUNDS) {
+                nextRoundBtn.classList.remove('hidden');
+                nextRoundBtn.disabled = false; // Ensure next round button is enabled
+                finishGameBtn.classList.add('hidden'); // Ensure finish button is hidden
+            } else {
+                nextRoundBtn.classList.add('hidden'); // Hide next round button
+                finishGameBtn.classList.remove('hidden');
+                finishGameBtn.disabled = false; // Ensure finish game button is enabled
+            }
+        }
+
+        function getRandomEvent() {
+            // 40% chance of an event occurring
+            if (Math.random() < 0.4) {
+                const randomIndex = Math.floor(Math.random() * randomEvents.length);
+                return randomEvents[randomIndex];
+            }
+            return null;
+        }
+
+        function nextRound() {
+            currentRound++;
+            selectedOptionId = null; // Reset selected option for next round
+            roundResultMessage.classList.add('hidden');
+            eventMessageBox.classList.add('hidden');
+            nextRoundBtn.classList.add('hidden'); // Hide until new selection
+            finishGameBtn.classList.add('hidden'); // Hide until final round
+
+            if (currentRound <= TOTAL_ROUNDS) {
+                renderOptions(); // Re-render options to update disabled states based on new budget
+                updateDisplay();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            finalScoreDisplay.classList.remove('hidden');
+            finalBudgetSpan.textContent = `₹${currentBudget} Crore`;
+            finalLivesSpan.textContent = `${totalLivesSaved.toLocaleString()} lives`;
+
+            if (totalLivesSaved >= 1500000 && currentBudget >= 0) { // Higher winning condition for more rounds
+                gameOutcomeMessage.textContent = "Phenomenal! You've saved an incredible number of lives and managed your budget with foresight. Your country thrives!";
+                gameOutcomeMessage.classList.add('text-green-400');
+            } else if (totalLivesSaved >= 750000) {
+                gameOutcomeMessage.textContent = "Excellent! You saved many lives, showing strong leadership. There's always room for even greater impact!";
+                gameOutcomeMessage.classList.add('text-yellow-400');
+            } else {
+                gameOutcomeMessage.textContent = "A challenging tenure. While efforts were made, significant improvements are needed in strategic public health investment.";
+                gameOutcomeMessage.classList.add('text-red-400');
+            }
+        }
+
+        function resetGame() {
+            currentBudget = INITIAL_BUDGET;
+            totalLivesSaved = 0;
+            currentRound = 1;
+            selectedOptionId = null;
+
+            finalScoreDisplay.classList.add('hidden');
+            roundResultMessage.classList.add('hidden');
+            eventMessageBox.classList.add('hidden');
+            nextRoundBtn.classList.add('hidden');
+            finishGameBtn.classList.add('hidden');
+
+            renderOptions(); // Re-render options for fresh start
+            updateDisplay();
+        }
+
+        // --- Event Listeners ---
+        nextRoundBtn.addEventListener('click', nextRound);
+        finishGameBtn.addEventListener('click', endGame);
+        restartGameBtn.addEventListener('click', resetGame);
+
+        // Initial game setup
+        renderOptions(); // Render options at start
+        updateDisplay();
+
+        // Function to toggle dropdown visibility
+        function toggleDropdown(event) {
+            event.preventDefault(); // Prevent the default link behavior
+            const dropdownContent = document.getElementById('budgetChallengeDropdown');
+            dropdownContent.classList.toggle('hidden'); // Toggle Tailwind's hidden class
+        }
+
+        // Close the dropdown if the user clicks outside of it
+        window.onclick = function(event) {
+            if (!event.target.matches('.dropdown a')) {
+                const dropdowns = document.getElementsByClassName("dropdown-content");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    const openDropdown = dropdowns[i];
+                    if (!openDropdown.classList.contains('hidden')) {
+                        openDropdown.classList.add('hidden');
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
